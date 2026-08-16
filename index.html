@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <!-- ======================================== -->
+<!-- FIREBASE DATABASE KONEKSI -->
+<!-- ======================================== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCVm5Pfg8wTrwFw8tClXse3Qa4boJkQ7Ek",
+    authDomain: "ast2-database.firebaseapp.com",
+    projectId: "ast2-database",
+    storageBucket: "ast2-database.firebasestorage.app",
+    messagingSenderId: "1057748242781",
+    appId: "1:1057748242781:web:83a08db2c828d1f3c298b4"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  window.db = getFirestore(app);
+  console.log("✅ Database Terhubung!");
+</script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AST2 — Asteroid2Shiba</title>
@@ -378,6 +399,129 @@ function perbaruiTampilan(){
     document.getElementById('sumTask').innerText = Math.floor(poin*0.07).toLocaleString('id-ID');
     document.getElementById('sumTotal').innerText = poin.toLocaleString('id-ID');
 }
+    // ==============================================
+// FUNGSI SIMPAN & BACA DATA DARI DATABASE
+// ==============================================
+
+// 1. Dapatkan atau Buat UID Pengguna
+function dapatkanUID() {
+  let uid = localStorage.getItem('ast2uid');
+  if (!uid) {
+    uid = '100' + Math.floor(Math.random() * 900000);
+    localStorage.setItem('ast2uid', uid);
+  }
+  return uid;
+}
+
+// 2. Baca Siapa Yang Mengundang
+async function bacaPengundang() {
+  const uid = dapatkanUID();
+  const hash = window.location.search;
+  let pengundang = null;
+
+  // Baca kode undangan dari tautan
+  if (hash.includes('startapp=ref')) {
+    pengundang = hash.split('ref')[1];
+    localStorage.setItem('pengundang', pengundang);
+  }
+
+  // Cek apakah sudah terdaftar di Database
+  if (window.db) {
+    const { doc, getDoc, setDoc, updateDoc, increment } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js");
+    const ref = doc(window.db, "members", uid);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists) {
+      // Daftar member baru
+      await setDoc(ref, {
+        uid: uid,
+        nama: "Pengguna " + uid,
+        poin: 0,
+        ast2: 0,
+        miningTerakhir: 0,
+        hariCheckin: 0,
+        sudahCheckin: false,
+        pengundang: pengundang,
+        totalUndangan: 0,
+        tanggalBergabung: new Date()
+      });
+      console.log("✅ Member Baru Tersimpan:", uid);
+
+      // Beri poin ke pengundang
+      if (pengundang) {
+        const refPengundang = doc(window.db, "members", pengundang);
+        const snapPengundang = await getDoc(refPengundang);
+        if (snapPengundang.exists) {
+          await updateDoc(refPengundang, {
+            poin: increment(100),
+            totalUndangan: increment(1)
+          });
+          alert("✅ Pengundang mendapat +100 Poin!");
+        }
+      }
+    }
+  }
+}
+
+// 3. Tambah Poin ke Database
+async function tambahPoinDatabase(jumlah) {
+  const uid = dapatkanUID();
+  if (!window.db) return;
+
+  const { doc, updateDoc, increment } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js");
+  const ref = doc(window.db, "members", uid);
+  await updateDoc(ref, {
+    poin: increment(jumlah)
+  });
+  console.log(`✅ +${jumlah} Poin tersimpan di Database!`);
+}
+
+// 4. Simpan Waktu Mining & Check-in
+async function simpanAktivitas(jenis, waktu) {
+  const uid = dapatkanUID();
+  if (!window.db) return;
+
+  const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js");
+  const ref = doc(window.db, "members", uid);
+  
+  if (jenis === 'mining') {
+    await updateDoc(ref, { miningTerakhir: waktu });
+  } else if (jenis === 'checkin') {
+    await updateDoc(ref, { hariCheckin: waktu, sudahCheckin: true });
+  }
+}
+
+// 5. Baca Data Pengguna Saat Ini
+async function bacaDataPengguna() {
+  const uid = dapatkanUID();
+  if (!window.db) return null;
+
+  const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js");
+  const ref = doc(window.db, "members", uid);
+  const snap = await getDoc(ref);
+  return snap.exists ? snap.data() : null;
+}
+
+// 6. Buat Tautan Undangan Otomatis
+function buatTautanUndangan() {
+  const uid = dapatkanUID();
+  return `https://t.me/asteroid2shiba_bot/app?startapp=ref${uid}`;
+}
+
+// ==============================================
+// JALANKAN SAAT APLIKASI DIBUKA
+// ==============================================
+window.onload = async function() {
+  await bacaPengundang();
+  console.log("✅ Data Pengguna Siap! UID:", dapatkanUID());
+  
+  // Tampilkan tautan undangan di halaman
+  const elemenTautan = document.getElementById('refLink');
+  if (elemenTautan) {
+    elemenTautan.innerText = buatTautanUndangan();
+  }
+};
+
 </script>
 </body>
 </html>
