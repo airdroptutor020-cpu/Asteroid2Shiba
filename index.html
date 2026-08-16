@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AST2 — Asteroid2Shiba</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+        :root{--bg:#0b0e28;--card:#14183a;--card2:#1a1f4b;--accent:#ffc107;--blue:#2979ff;--green:#00e676;--text:#fff;--muted:#8c90c2}
+        body{background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:85px}
+        .container{max-width:430px;margin:0 auto;padding:16px}
+
+        /* Header */
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+        .user-info{display:flex;align-items:center;gap:8px}
+        .avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px}
+        .user-meta p{font-size:12px;color:var(--muted)}
+        .icons{display:flex;gap:12px;font-size:18px}
+
+        /* Hero Card */
+        .hero{background:linear-gradient(180deg,#14183a,#0f1230);border-radius:20px;padding:20px;text-align:center;margin-bottom:16px;position:relative;overflow:hidden}
+        .hero::before{content:'';position:absolute;top:0;left:0;right:0;height:100%;background:url('') no-repeat center;opacity:0.05}
+        .hero-avatar{width:90px;height:90px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:50px;margin:0 auto 10px}
+        .hero h1{font-size:22px}
+        .hero p{font-size:13px;color:var(--muted);margin-bottom:16px}
+        .hero-stats{display:flex;justify-content:space-around}
+        .hero-stat{text-align:center}
+        .hero-stat-val{font-size:18px;font-weight:bold}
+        .hero-stat-lab{font-size:12px;color:var(--muted)}
+
+        /* Mining Box */
+        .mining-box{background:var(--card2);border-radius:14px;padding:14px;margin-bottom:12px}
+        .mining-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+        .mining-time{font-size:20px;font-weight:bold;color:var(--accent)}
+        .btn{border:none;border-radius:10px;padding:12px;font-weight:bold;font-size:15px;cursor:pointer;width:100%}
+        .btn-yellow{background:var(--accent);color:#000}
+        .btn-yellow:disabled{background:#444;cursor:not-allowed;opacity:0.7}
+        .btn-blue{background:var(--blue);color:#fff}
+        .checkin-row{display:flex;gap:10px;margin-top:10px}
+        .checkin-row button{flex:1}
+
+        /* Announcement */
+        .announce{background:var(--card2);border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:13px;color:#ddd}
+
+        /* Wallet Page */
+        .wallet-top{background:var(--card);border-radius:16px;padding:18px;margin-bottom:16px}
+        .wallet-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+        .wallet-val{font-size:24px;font-weight:bold}
+        .wallet-sub{font-size:13px;color:var(--muted)}
+        .summary{background:var(--card2);border-radius:12px;padding:14px;margin-bottom:16px}
+        .summary h4{margin-bottom:10px}
+        .sum-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}
+        .sum-total{border-top:1px solid #334;padding-top:8px;margin-top:4px;font-weight:bold;color:var(--green)}
+        .history{background:var(--card);border-radius:12px;padding:14px}
+        .history h4{margin-bottom:10px}
+        .hist-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #223}
+        .hist-l{display:flex;align-items:center;gap:8px;font-size:14px}
+        .hist-r{text-align:right}
+        .hist-amt{font-size:14px;font-weight:bold;color:var(--green)}
+        .hist-time{font-size:11px;color:var(--muted)}
+
+        /* Task Page */
+        .task-item{background:var(--card);border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+        .task-l{display:flex;align-items:center;gap:10px}
+        .task-icon{width:36px;height:36px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px}
+        .task-info p{font-size:13px;color:var(--muted)}
+        .btn-go{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:bold}
+        .btn-go:disabled{background:#336;opacity:0.7}
+
+        /* Check-in Calendar */
+        .calendar{background:var(--card);border-radius:16px;padding:20px;text-align:center}
+        .day-badge{font-size:28px;font-weight:bold;color:var(--blue);margin-bottom:16px}
+        .grid-days{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+        .day-item{background:var(--card2);border-radius:10px;padding:10px;text-align:center}
+        .day-item.active{background:var(--blue)}
+        .day-item.claimed{background:#1e5a3c;color:#8cf}
+        .day-val{font-weight:bold}
+        .day-rew{font-size:11px;color:var(--muted)}
+
+        /* Referral Page */
+        .ref-card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:16px;text-align:center}
+        .ref-code{background:var(--card2);border-radius:10px;padding:10px;display:flex;justify-content:space-between;align-items:center;margin:10px 0}
+        .ref-link{background:var(--card2);border-radius:10px;padding:10px;font-size:11px;word-break:break-all;margin-bottom:10px}
+        .ref-stats{display:flex;justify-content:space-around;margin-top:12px}
+        .ref-list{background:var(--card);border-radius:12px;padding:14px}
+        .ref-list h4{margin-bottom:10px}
+        .ref-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #223}
+
+        /* Profile Page */
+        .prof-card{background:var(--card);border-radius:16px;padding:20px;text-align:center;margin-bottom:16px}
+        .prof-avatar{width:70px;height:70px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 10px}
+        .prof-level{display:inline-block;background:#7b5a28;color:var(--accent);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:bold;margin:6px 0}
+        .prof-stats{display:flex;justify-content:space-around;margin-top:16px}
+        .prof-menu{background:var(--card);border-radius:12px;overflow:hidden}
+        .prof-mitem{display:flex;justify-content:space-between;align-items:center;padding:14px;border-bottom:1px solid #223}
+
+        /* Bottom Nav */
+        .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--card);display:flex;justify-content:space-around;padding:10px 0;border-top-left-radius:20px;border-top-right-radius:20px}
+        .nav-item{text-align:center;font-size:11px;color:var(--muted);cursor:pointer}
+        .nav-item.active{color:var(--accent)}
+        .nav-item i{font-size:20px;display:block;margin-bottom:3px}
+
+        /* Page Switch */
+        .page{display:none}
+        .page.active{display:block}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- ===== HOME PAGE ===== -->
+    <div id="page-home" class="page active">
+        <div class="header">
+            <div class="user-info">
+                <div class="avatar">🐶</div>
+                <div class="user-meta"><b id="userName">Keneng</b><p>UID: <span id="uid">100012</span></p></div>
+            </div>
+            <div class="icons">🔔 ⚙️</div>
+        </div>
+
+        <div class="hero">
+            <div class="hero-avatar">🐶</div>
+            <h1>ASTEROID2SHIBA</h1>
+            <p>Mine • Earn • Grow</p>
+            <div class="hero-stats">
+                <div class="hero-stat"><div class="hero-stat-val" id="hTotalPoint">15,250</div><div class="hero-stat-lab">Total Point</div></div>
+                <div class="hero-stat"><div class="hero-stat-val" id="hAst2">125.000</div><div class="hero-stat-lab">AST2 Coin</div></div>
+            </div>
+        </div>
+
+        <div class="mining-box">
+            <div class="mining-head"><span>⛏️ Mining</span><span class="mining-time" id="miningTime">02:15:24</span></div>
+            <button class="btn btn-yellow" id="btnMining" onclick="mulaiMining()">MINING...</button>
+        </div>
+
+        <div class="mining-box">
+            <div class="mining-head"><span>📅 Daily Check-in (Hari <span id="dayNow">7</span>/30)</span><span style="color:var(--accent)">+400</span></div>
+            <div class="checkin-row">
+                <button class="btn btn-yellow" id="btnCheck" onclick="checkIn()">CHECK-IN NOW</button>
+                <button class="btn btn-blue" onclick="bukaCheckin()">Lihat Kalender</button>
+            </div>
+        </div>
+
+        <div class="announce">📢 <span>Selamat datang di AST2 Mini App! Selesaikan tugas & undang teman untuk poin lebih banyak!</span></div>
+    </div>
+
+    <!-- ===== WALLET PAGE ===== -->
+    <div id="page-wallet" class="page">
+        <div class="wallet-top">
+            <div class="wallet-row"><span>🪙 AST2 COIN</span></div>
+            <div class="wallet-val" id="wAst2">125.000</div>
+            <div class="wallet-sub">≈ $12.50</div>
+            <div class="wallet-row" style="margin-top:12px"><span>⭐ TOTAL POINT</span></div>
+            <div class="wallet-val" id="wPoint">15,250</div>
+        </div>
+
+        <div class="summary">
+            <h4>Ringkasan Hadiah</h4>
+            <div class="sum-row"><span>⛏️ Mining Reward</span><span id="sumMining">9,000</span></div>
+            <div class="sum-row"><span>📅 Check-in Reward</span><span id="sumCheck">3,250</span></div>
+            <div class="sum-row"><span>👥 Referral Reward</span><span id="sumRef">2,000</span></div>
+            <div class="sum-row"><span>✅ Task Reward</span><span id="sumTask">1,000</span></div>
+            <div class="sum-row sum-total"><span>TOTAL</span><span id="sumTotal">15,250</span></div>
+            <button class="btn btn-blue" style="margin-top:12px">🔄 Konversi Poin ke AST2</button>
+        </div>
+
+        <div class="history">
+            <h4>Aktivitas Terbaru</h4>
+            <div class="hist-item"><div class="hist-l">⛏️ Mining Reward</div><div class="hist-r"><div class="hist-amt">+1,000</div><div class="hist-time">2 jam lalu</div></div></div>
+            <div class="hist-item"><div class="hist-l">📅 Check-in Hari 7</div><div class="hist-r"><div class="hist-amt">+400</div><div class="hist-time">Hari ini</div></div></div>
+            <div class="hist-item"><div class="hist-l">👤 Undang Teman</div><div class="hist-r"><div class="hist-amt">+100</div><div class="hist-time">1 hari lalu</div></div></div>
+        </div>
+    </div>
+
+    <!-- ===== TASK PAGE ===== -->
+    <div id="page-task" class="page">
+        <h3 style="margin-bottom:14px">✅ Tugas Harian</h3>
+        <div class="task-item"><div class="task-l"><div class="task-icon">📢</div><div class="task-info"><b>Gabung Grup Telegram</b><p>+300 Poin</p></div></div><button class="btn-go" onclick="selesaikanTugas(this,300)">GO</button></div>
+        <div class="task-item"><div class="task-l"><div class="task-icon">𝕏</div><div class="task-info"><b>Ikuti di X/Twitter</b><p>+300 Poin</p></div></div><button class="btn-go" onclick="selesaikanTugas(this,300)">GO</button></div>
+        <div class="task-item"><div class="task-l"><div class="task-icon">📸</div><div class="task-info"><b>Ikuti Instagram</b><p>+300 Poin</p></div></div><button class="btn-go" onclick="selesaikanTugas(this,300)">GO</button></div>
+        <div class="task-item"><div class="task-l"><div class="task-icon">▶️</div><div class="task-info"><b>Subscribe YouTube</b><p>+500 Poin</p></div></div><button class="btn-go" onclick="selesaikanTugas(this,500)">GO</button></div>
+        <div class="task-item"><div class="task-l"><div class="task-icon">🌐</div><div class="task-info"><b>Kunjungi Website</b><p>+200 Poin</p></div></div><button class="btn-go" onclick="selesaikanTugas(this,200)">GO</button></div>
+        <div class="task-item"><div class="task-l"><div class="task-icon">👥</div><div class="task-info"><b>Undang 5 Teman</b><p>+1,000 Poin</p></div></div><button class="btn-go" onclick="selesaikanTugas(this,1000)">GO</button></div>
+    </div>
+
+    <!-- ===== CHECK-IN PAGE ===== -->
+    <div id="page-checkin" class="page">
+        <div class="calendar">
+            <h3>📅 Daily Check-in</h3>
+            <div class="day-badge">Hari <span id="ciDay">7</span></div>
+            <p style="color:var(--muted);margin-bottom:16px">Check-in tiap hari, hadiah bertambah!</p>
+            <div class="grid-days" id="gridDays"></div>
+            <button class="btn btn-blue" id="btnClaim" onclick="klaimCheckin()">✅ KLAIM HADIAH HARI INI</button>
+        </div>
+    </div>
+
+    <!-- ===== REFERRAL PAGE ===== -->
+    <div id="page-referral" class="page">
+        <div class="ref-card">
+            <h3>👥 Undang Teman & Dapat Hadiah</h3>
+            <p style="color:var(--muted);margin:8px 0">Kode Referral Anda</p>
+            <div class="ref-code"><b id="refCode">AST2100012</b> <button class="btn-go" onclick="salinTeks('AST2100012')">📋 Salin</button></div>
+            <p style="color:var(--muted);margin:8px 0">Link Referral</p>
+            <div class="ref-link" id="refLink">t.me/AST2Bot/app?startapp=ref100012</div>
+            <button class="btn btn-blue" onclick="salinTeks(document.getElementById('refLink').innerText)">📋 BAGIKAN LINK</button>
+            <div class="ref-stats">
+                <div><b id="refTotal">12</b><p style="color:var(--muted);font-size:12px">Total Undangan</p></div>
+                <div><b id="refReward">2,000</b><p style="color:var(--muted);font-size:12px">Total Poin</p></div>
+            </div>
+        </div>
+        <div class="ref-list">
+            <h4>Daftar Undangan</h4>
+            <div class="ref-item"><span>@user1</span><span style="color:var(--green)">+100</span></div>
+            <div class="ref-item"><span>@user2</span><span style="color:var(--green)">+100</span></div>
+            <div class="ref-item"><span>@user3</span><span style="color:var(--green)">+100</span></div>
+        </div>
+    </div>
+
+    <!-- ===== PROFILE PAGE ===== -->
+    <div id="page-profile" class="page">
+        <div class="prof-card">
+            <div class="prof-avatar">👤</div>
+            <h3 id="pName">Keneng</h3>
+            <p style="color:var(--muted)">UID: <span id="pUid">100012</span></p>
+            <div class="prof-level">🏅 Bronze</div>
+            <div class="prof-stats">
+                <div><p style="color:var(--muted);font-size:12px">Level</p><b>Bronze</b></div>
+                <div><p style="color:var(--muted);font-size:12px">Total Poin</p><b id="pPoint">15,250</b></div>
+                <div><p style="color:var(--muted);font-size:12px">AST2 Coin</p><b id="pAst2">125.000</b></div>
+            </div>
+            <div class="prof-stats" style="margin-top:10px">
+                <div><p style="color:var(--muted);font-size:12px">Total Undangan</p><b id="pRef">12</b></div>
+                <div><p style="color:var(--muted);font-size:12px">Bergabung</p><b>30 Juli 2026</b></div>
+            </div>
+        </div>
+        <div class="prof-menu">
+            <div class="prof-mitem"><span>🔒 Keamanan</span><span>›</span></div>
+            <div class="prof-mitem"><span>💬 Dukungan</span><span>›</span></div>
+            <div class="prof-mitem"><span>ℹ️ Tentang AST2</span><span>›</span></div>
+            <div class="prof-mitem" style="color:#f44336"><span>🚪 Keluar</span><span>›</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== BOTTOM NAVIGATION ===== -->
+<div class="nav">
+    <div class="nav-item active" onclick="bukaHalaman('home')"><i>🏠</i>Home</div>
+    <div class="nav-item" onclick="bukaHalaman('wallet')"><i>💰</i>Wallet</div>
+    <div class="nav-item" onclick="bukaHalaman('task')"><i>✅</i>Tugas</div>
+    <div class="nav-item" onclick="bukaHalaman('referral')"><i>👥</i>Undang</div>
+    <div class="nav-item" onclick="bukaHalaman('profile')"><i>👤</i>Akun</div>
+</div>
+
+<script>
+// Data Penyimpanan
+let poin = parseInt(localStorage.getItem('ast2poin') || '15250');
+let coin = parseFloat(localStorage.getItem('ast2coin') || '125.000');
+let hariCheckin = parseInt(localStorage.getItem('ast2day') || '7');
+let sudahCheckin = localStorage.getItem('ast2checked') === 'yes';
+let miningAktif = localStorage.getItem('ast2mining') || 'off';
+let miningSelesai = parseInt(localStorage.getItem('ast2miningEnd') || '0');
+let uid = '100012';
+let nama = 'Keneng';
+
+// Hadiah per hari check-in
+const hadiahCheckin = [100,150,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000,1050,1100,1150,1200,1250,1300,1350,1400,1450,1500,1550];
+
+// Inisialisasi
+window.onload = function(){
+    renderKalender();
+    perbaruiTampilan();
+    cekMining();
+}
+
+// Ganti Halaman
+function bukaHalaman(hal){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.getElementById('page-'+hal).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+
+function bukaCheckin(){
+    bukaHalaman('checkin');
+}
+
+// Mining
+function mulaiMining(){
+    if(miningAktif === 'on') return alert('⏳ Mining sedang berjalan! Tunggu selesai.');
+    miningAktif = 'on';
+    miningSelesai = Date.now() + 3*60*60*1000; // 3 jam
+    localStorage.setItem('ast2mining','on');
+    localStorage.setItem('ast2miningEnd',miningSelesai);
+    cekMining();
+}
+
+function cekMining(){
+    const btn = document.getElementById('btnMining');
+    if(miningAktif === 'on'){
+        let sisa = miningSelesai - Date.now();
+        if(sisa <= 0){
+            poin += 1000;
+            localStorage.setItem('ast2poin',poin);
+            miningAktif = 'off';
+            localStorage.setItem('ast2mining','off');
+            alert('✅ Mining selesai! +1.000 Poin');
+            perbaruiTampilan();
+            btn.innerText = 'MINING...'; btn.disabled = false;
+        }else{
+            let j = Math.floor(sisa/3600000);
+            let m = Math.floor((sisa%3600000)/60000);
+            let d = Math.floor((sisa%60000)/1000);
+            document.getElementById('miningTime').innerText = `${j}:${m}:${d}`;
+            btn.innerText = `⏳ ${j}:${m}:${d}`; btn.disabled = true;
+            setTimeout(cekMining,1000);
+        }
+    }else{
+        document.getElementById('miningTime').innerText = '03:00:00';
+        btn.innerText = '⛏️ MULAI MINING'; btn.disabled = false;
+    }
+}
+
+// Check-in
+function checkIn(){
+    bukaHalaman('checkin');
+}
+
+function klaimCheckin(){
+    if(sudahCheckin) return alert('✅ Sudah check-in hari ini! Lanjut besok.');
+    let hadiah = hadiahCheckin[hariCheckin-1] || 400;
+    poin += hadiah;
+    hariCheckin++;
+    sudahCheckin = true;
+    localStorage.setItem('ast2poin',poin);
+    localStorage.setItem('ast2day',hariCheckin);
+    localStorage.setItem('ast2checked','yes');
+    alert(`✅ Berhasil Check-in Hari ${hariCheckin-1}! +${hadiah} Poin`);
+    perbaruiTampilan();
+    renderKalender();
+}
+
+function renderKalender(){
+    const cont = document.getElementById('gridDays');
+    cont.innerHTML = '';
+    for(let i=1;i<=10;i++){
+        let cls = 'day-item';
+        if(i < hariCheckin) cls += ' claimed';
+        if(i === hariCheckin) cls += ' active';
+        cont.innerHTML += `<div class="${cls}"><div class="day-val">${i}</div><div class="day-rew">${hadiahCheckin[i-1]} Poin</div></div>`;
+    }
+    document.getElementById('ciDay').innerText = hariCheckin;
+    document.getElementById('dayNow').innerText = hariCheckin;
+}
+
+// Tugas
+function selesaikanTugas(btn,jumlah){
+    btn.disabled = true;
+    btn.innerText = '✅';
+    poin += jumlah;
+    localStorage.setItem('ast2poin',poin);
+    alert(`✅ Tugas selesai! +${jumlah} Poin`);
+    perbaruiTampilan();
+}
+
+// Salin Teks
+function salinTeks(teks){
+    navigator.clipboard.writeText(teks).then(()=>alert('✅ Disalin!'));
+}
+
+// Perbarui Tampilan
+function perbaruiTampilan(){
+    document.getElementById('hTotalPoint').innerText = poin.toLocaleString('id-ID');
+    document.getElementById('wPoint').innerText = poin.toLocaleString('id-ID');
+    document.getElementById('pPoint').innerText = poin.toLocaleString('id-ID');
+    document.getElementById('sumMining').innerText = Math.floor(poin*0.59).toLocaleString('id-ID');
+    document.getElementById('sumCheck').innerText = Math.floor(poin*0.21).toLocaleString('id-ID');
+    document.getElementById('sumRef').innerText = Math.floor(poin*0.13).toLocaleString('id-ID');
+    document.getElementById('sumTask').innerText = Math.floor(poin*0.07).toLocaleString('id-ID');
+    document.getElementById('sumTotal').innerText = poin.toLocaleString('id-ID');
+}
+</script>
+</body>
+</html>
