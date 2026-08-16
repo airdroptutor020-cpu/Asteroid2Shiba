@@ -1,527 +1,241 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <!-- ======================================== -->
-<!-- FIREBASE DATABASE KONEKSI -->
-<!-- ======================================== -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getFirestore, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCVm5Pfg8wTrwFw8tClXse3Qa4boJkQ7Ek",
-    authDomain: "ast2-database.firebaseapp.com",
-    projectId: "ast2-database",
-    storageBucket: "ast2-database.firebasestorage.app",
-    messagingSenderId: "1057748242781",
-    appId: "1:1057748242781:web:83a08db2c828d1f3c298b4"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  window.db = getFirestore(app);
-  console.log("✅ Database Terhubung!");
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asteroid App - AST2</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "firebase-app": "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js",
+    "firebase-firestore": "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js",
+    "firebase-analytics": "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js"
+  }
+}
 </script>
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AST2 — Asteroid2Shiba</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
-        :root{--bg:#0b0e28;--card:#14183a;--card2:#1a1f4b;--accent:#ffc107;--blue:#2979ff;--green:#00e676;--text:#fff;--muted:#8c90c2}
-        body{background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:85px}
-        .container{max-width:430px;margin:0 auto;padding:16px}
-
-        /* Header */
-        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-        .user-info{display:flex;align-items:center;gap:8px}
-        .avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px}
-        .user-meta p{font-size:12px;color:var(--muted)}
-        .icons{display:flex;gap:12px;font-size:18px}
-
-        /* Hero Card */
-        .hero{background:linear-gradient(180deg,#14183a,#0f1230);border-radius:20px;padding:20px;text-align:center;margin-bottom:16px;position:relative;overflow:hidden}
-        .hero::before{content:'';position:absolute;top:0;left:0;right:0;height:100%;background:url('') no-repeat center;opacity:0.05}
-        .hero-avatar{width:90px;height:90px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:50px;margin:0 auto 10px}
-        .hero h1{font-size:22px}
-        .hero p{font-size:13px;color:var(--muted);margin-bottom:16px}
-        .hero-stats{display:flex;justify-content:space-around}
-        .hero-stat{text-align:center}
-        .hero-stat-val{font-size:18px;font-weight:bold}
-        .hero-stat-lab{font-size:12px;color:var(--muted)}
-
-        /* Mining Box */
-        .mining-box{background:var(--card2);border-radius:14px;padding:14px;margin-bottom:12px}
-        .mining-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-        .mining-time{font-size:20px;font-weight:bold;color:var(--accent)}
-        .btn{border:none;border-radius:10px;padding:12px;font-weight:bold;font-size:15px;cursor:pointer;width:100%}
-        .btn-yellow{background:var(--accent);color:#000}
-        .btn-yellow:disabled{background:#444;cursor:not-allowed;opacity:0.7}
-        .btn-blue{background:var(--blue);color:#fff}
-        .checkin-row{display:flex;gap:10px;margin-top:10px}
-        .checkin-row button{flex:1}
-
-        /* Announcement */
-        .announce{background:var(--card2);border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:13px;color:#ddd}
-
-        /* Wallet Page */
-        .wallet-top{background:var(--card);border-radius:16px;padding:18px;margin-bottom:16px}
-        .wallet-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-        .wallet-val{font-size:24px;font-weight:bold}
-        .wallet-sub{font-size:13px;color:var(--muted)}
-        .summary{background:var(--card2);border-radius:12px;padding:14px;margin-bottom:16px}
-        .summary h4{margin-bottom:10px}
-        .sum-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}
-        .sum-total{border-top:1px solid #334;padding-top:8px;margin-top:4px;font-weight:bold;color:var(--green)}
-        .history{background:var(--card);border-radius:12px;padding:14px}
-        .history h4{margin-bottom:10px}
-        .hist-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #223}
-        .hist-l{display:flex;align-items:center;gap:8px;font-size:14px}
-        .hist-r{text-align:right}
-        .hist-amt{font-size:14px;font-weight:bold;color:var(--green)}
-        .hist-time{font-size:11px;color:var(--muted)}
-
-        /* Task Page */
-        .task-item{background:var(--card);border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-        .task-l{display:flex;align-items:center;gap:10px}
-        .task-icon{width:36px;height:36px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px}
-        .task-info p{font-size:13px;color:var(--muted)}
-        .btn-go{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:bold}
-        .btn-go:disabled{background:#336;opacity:0.7}
-
-        /* Check-in Calendar */
-        .calendar{background:var(--card);border-radius:16px;padding:20px;text-align:center}
-        .day-badge{font-size:28px;font-weight:bold;color:var(--blue);margin-bottom:16px}
-        .grid-days{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
-        .day-item{background:var(--card2);border-radius:10px;padding:10px;text-align:center}
-        .day-item.active{background:var(--blue)}
-        .day-item.claimed{background:#1e5a3c;color:#8cf}
-        .day-val{font-weight:bold}
-        .day-rew{font-size:11px;color:var(--muted)}
-
-        /* Referral Page */
-        .ref-card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:16px;text-align:center}
-        .ref-code{background:var(--card2);border-radius:10px;padding:10px;display:flex;justify-content:space-between;align-items:center;margin:10px 0}
-        .ref-link{background:var(--card2);border-radius:10px;padding:10px;font-size:11px;word-break:break-all;margin-bottom:10px}
-        .ref-stats{display:flex;justify-content:space-around;margin-top:12px}
-        .ref-list{background:var(--card);border-radius:12px;padding:14px}
-        .ref-list h4{margin-bottom:10px}
-        .ref-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #223}
-
-        /* Profile Page */
-        .prof-card{background:var(--card);border-radius:16px;padding:20px;text-align:center;margin-bottom:16px}
-        .prof-avatar{width:70px;height:70px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 10px}
-        .prof-level{display:inline-block;background:#7b5a28;color:var(--accent);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:bold;margin:6px 0}
-        .prof-stats{display:flex;justify-content:space-around;margin-top:16px}
-        .prof-menu{background:var(--card);border-radius:12px;overflow:hidden}
-        .prof-mitem{display:flex;justify-content:space-between;align-items:center;padding:14px;border-bottom:1px solid #223}
-
-        /* Bottom Nav */
-        .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--card);display:flex;justify-content:space-around;padding:10px 0;border-top-left-radius:20px;border-top-right-radius:20px}
-        .nav-item{text-align:center;font-size:11px;color:var(--muted);cursor:pointer}
-        .nav-item.active{color:var(--accent)}
-        .nav-item i{font-size:20px;display:block;margin-bottom:3px}
-
-        /* Page Switch */
-        .page{display:none}
-        .page.active{display:block}
-    </style>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: #fff; }
+.app { max-width: 450px; margin: auto; padding: 20px; padding-bottom: 80px; }
+.lang-selector { position: absolute; top: 15px; right: 15px; z-index: 100; }
+.lang-selector select { background: #1a2236; color: #fff; border: 1px solid #00ff88; border-radius: 8px; padding: 6px 10px; }
+nav { position: fixed; bottom: 0; left: 0; width: 100%; display: flex; background: #111; z-index: 99; border-top: 1px solid #222; }
+nav button { flex: 1; padding: 12px; background: none; border: none; color: #aaa; font-size: 12px; }
+nav button.active { color: #00ff88; }
+.page { display: none; }
+.page.active { display: block; }
+h1 { text-align: center; margin: 20px 0; font-size: 24px; }
+.card { background: rgba(26,34,54,0.8); padding: 20px; border-radius: 15px; margin: 15px 0; text-align: center; border: 1px solid #00ff8844; }
+.card h2 { font-size: 32px; color: #00ff88; margin: 10px 0; }
+.btn { width: 100%; padding: 15px; background: #00ff88; color: #000; border: none; border-radius: 12px; font-weight: bold; margin: 10px 0; cursor: pointer; }
+.btn:disabled { background: #444; color: #888; }
+.task { display: flex; justify-content: space-between; align-items: center; background: rgba(26,34,54,0.8); padding: 12px; border-radius: 10px; margin: 8px 0; }
+input { width: 100%; padding: 10px; background: #0a0e1a; border: 1px solid #333; color: #fff; border-radius: 8px; margin: 10px 0; }
+body[dir="rtl"] { direction: rtl; text-align: right; }
+</style>
 </head>
 <body>
+<div class="app">
+  <div class="lang-selector">
+    <select id="langSelect">
+      <option value="id">🇮🇩 Indonesia</option>
+      <option value="en">🇺🇸 English</option>
+      <option value="cn">🇨🇳 中文</option>
+      <option value="ar">🇸🇦 العربية</option>
+      <option value="kr">🇰🇷 한국어</option>
+    </select>
+  </div>
 
-<div class="container">
-    <!-- ===== HOME PAGE ===== -->
-    <div id="page-home" class="page active">
-        <div class="header">
-            <div class="user-info">
-                <div class="avatar">🐶</div>
-                <div class="user-meta"><b id="userName">Keneng</b><p>UID: <span id="uid">100012</span></p></div>
-            </div>
-            <div class="icons">🔔 ⚙️</div>
-        </div>
-
-        <div class="hero">
-            <div class="hero-avatar">🐶</div>
-            <h1>ASTEROID2SHIBA</h1>
-            <p>Mine • Earn • Grow</p>
-            <div class="hero-stats">
-                <div class="hero-stat"><div class="hero-stat-val" id="hTotalPoint">15,250</div><div class="hero-stat-lab">Total Point</div></div>
-                <div class="hero-stat"><div class="hero-stat-val" id="hAst2">125.000</div><div class="hero-stat-lab">AST2 Coin</div></div>
-            </div>
-        </div>
-
-        <div class="mining-box">
-            <div class="mining-head"><span>⛏️ Mining</span><span class="mining-time" id="miningTime">02:15:24</span></div>
-            <button class="btn btn-yellow" id="btnMining" onclick="mulaiMining()">MINING...</button>
-        </div>
-
-        <div class="mining-box">
-            <div class="mining-head"><span>📅 Daily Check-in (Hari <span id="dayNow">7</span>/30)</span><span style="color:var(--accent)">+400</span></div>
-            <div class="checkin-row">
-                <button class="btn btn-yellow" id="btnCheck" onclick="checkIn()">CHECK-IN NOW</button>
-                <button class="btn btn-blue" onclick="bukaCheckin()">Lihat Kalender</button>
-            </div>
-        </div>
-
-        <div class="announce">📢 <span>Selamat datang di AST2 Mini App! Selesaikan tugas & undang teman untuk poin lebih banyak!</span></div>
+  <div id="home" class="page active">
+    <h1>⛏️ Asteroid AST2</h1>
+    <div class="card">
+      <p id="balanceText">Saldo Poin</p>
+      <h2 id="poin">0</h2>
+      <p>= <span id="ast2">0.00</span> AST2</p>
     </div>
+    <button class="btn" id="btnMining"></button>
+    <button class="btn" id="btnCheckin"></button>
+    <p id="timer" style="text-align:center; margin-top:10px; color:#aaa;"></p>
+  </div>
 
-    <!-- ===== WALLET PAGE ===== -->
-    <div id="page-wallet" class="page">
-        <div class="wallet-top">
-            <div class="wallet-row"><span>🪙 AST2 COIN</span></div>
-            <div class="wallet-val" id="wAst2">125.000</div>
-            <div class="wallet-sub">≈ $12.50</div>
-            <div class="wallet-row" style="margin-top:12px"><span>⭐ TOTAL POINT</span></div>
-            <div class="wallet-val" id="wPoint">15,250</div>
-        </div>
+  <div id="task" class="page">
+    <h1 id="taskTitle"></h1>
+    <div id="taskList"></div>
+  </div>
 
-        <div class="summary">
-            <h4>Ringkasan Hadiah</h4>
-            <div class="sum-row"><span>⛏️ Mining Reward</span><span id="sumMining">9,000</span></div>
-            <div class="sum-row"><span>📅 Check-in Reward</span><span id="sumCheck">3,250</span></div>
-            <div class="sum-row"><span>👥 Referral Reward</span><span id="sumRef">2,000</span></div>
-            <div class="sum-row"><span>✅ Task Reward</span><span id="sumTask">1,000</span></div>
-            <div class="sum-row sum-total"><span>TOTAL</span><span id="sumTotal">15,250</span></div>
-            <button class="btn btn-blue" style="margin-top:12px">🔄 Konversi Poin ke AST2</button>
-        </div>
-
-        <div class="history">
-            <h4>Aktivitas Terbaru</h4>
-            <div class="hist-item"><div class="hist-l">⛏️ Mining Reward</div><div class="hist-r"><div class="hist-amt">+1,000</div><div class="hist-time">2 jam lalu</div></div></div>
-            <div class="hist-item"><div class="hist-l">📅 Check-in Hari 7</div><div class="hist-r"><div class="hist-amt">+400</div><div class="hist-time">Hari ini</div></div></div>
-            <div class="hist-item"><div class="hist-l">👤 Undang Teman</div><div class="hist-r"><div class="hist-amt">+100</div><div class="hist-time">1 hari lalu</div></div></div>
-        </div>
+  <div id="invite" class="page">
+    <h1 id="inviteTitle"></h1>
+    <div class="card">
+      <p id="refText"></p>
+      <input type="text" id="refLink" readonly>
+      <button class="btn" onclick="copyRef()" id="copyBtn"></button>
     </div>
+    <p id="refBonus" style="text-align:center;"></p>
+  </div>
 
-    <!-- ===== TASK PAGE ===== -->
-    <div id="page-task" class="page">
-        <h3 style="margin-bottom:14px">✅ Tugas Harian</h3>
-        <div class="task-item"><div class="task-l"><div class="task-icon">📢</div><div class="task-info"><b>Gabung Grup Telegram</b><p>+300 Poin</p></div></div><button class="btn-go" onclick="selesaikanTugas(this,300)">GO</button></div>
-        <div class="task-item"><div class="task-l"><div class="task-icon">𝕏</div><div class="task-info"><b>Ikuti di X/Twitter</b><p>+300 Poin</p></div></div><button class="btn-go" onclick="selesaikanTugas(this,300)">GO</button></div>
-        <div class="task-item"><div class="task-l"><div class="task-icon">📸</div><div class="task-info"><b>Ikuti Instagram</b><p>+300 Poin</p></div></div><button class="btn-go" onclick="selesaikanTugas(this,300)">GO</button></div>
-        <div class="task-item"><div class="task-l"><div class="task-icon">▶️</div><div class="task-info"><b>Subscribe YouTube</b><p>+500 Poin</p></div></div><button class="btn-go" onclick="selesaikanTugas(this,500)">GO</button></div>
-        <div class="task-item"><div class="task-l"><div class="task-icon">🌐</div><div class="task-info"><b>Kunjungi Website</b><p>+200 Poin</p></div></div><button class="btn-go" onclick="selesaikanTugas(this,200)">GO</button></div>
-        <div class="task-item"><div class="task-l"><div class="task-icon">👥</div><div class="task-info"><b>Undang 5 Teman</b><p>+1,000 Poin</p></div></div><button class="btn-go" onclick="selesaikanTugas(this,1000)">GO</button></div>
+  <div id="wallet" class="page">
+    <h1 id="walletTitle"></h1>
+    <div class="card">
+      <p><span id="poin2">0</span> <span id="poinLabel">Poin</span></p>
+      <p><span id="ast22">0.00</span> AST2</p>
     </div>
-
-    <!-- ===== CHECK-IN PAGE ===== -->
-    <div id="page-checkin" class="page">
-        <div class="calendar">
-            <h3>📅 Daily Check-in</h3>
-            <div class="day-badge">Hari <span id="ciDay">7</span></div>
-            <p style="color:var(--muted);margin-bottom:16px">Check-in tiap hari, hadiah bertambah!</p>
-            <div class="grid-days" id="gridDays"></div>
-            <button class="btn btn-blue" id="btnClaim" onclick="klaimCheckin()">✅ KLAIM HADIAH HARI INI</button>
-        </div>
-    </div>
-
-    <!-- ===== REFERRAL PAGE ===== -->
-    <div id="page-referral" class="page">
-        <div class="ref-card">
-            <h3>👥 Undang Teman & Dapat Hadiah</h3>
-            <p style="color:var(--muted);margin:8px 0">Kode Referral Anda</p>
-            <div class="ref-code"><b id="refCode">AST2100012</b> <button class="btn-go" onclick="salinTeks('AST2100012')">📋 Salin</button></div>
-            <p style="color:var(--muted);margin:8px 0">Link Referral</p>
-            <div class="ref-link" id="refLink">t.me/AST2Bot/app?startapp=ref100012</div>
-            <button class="btn btn-blue" onclick="salinTeks(document.getElementById('refLink').innerText)">📋 BAGIKAN LINK</button>
-            <div class="ref-stats">
-                <div><b id="refTotal">12</b><p style="color:var(--muted);font-size:12px">Total Undangan</p></div>
-                <div><b id="refReward">2,000</b><p style="color:var(--muted);font-size:12px">Total Poin</p></div>
-            </div>
-        </div>
-        <div class="ref-list">
-            <h4>Daftar Undangan</h4>
-            <div class="ref-item"><span>@user1</span><span style="color:var(--green)">+100</span></div>
-            <div class="ref-item"><span>@user2</span><span style="color:var(--green)">+100</span></div>
-            <div class="ref-item"><span>@user3</span><span style="color:var(--green)">+100</span></div>
-        </div>
-    </div>
-
-    <!-- ===== PROFILE PAGE ===== -->
-    <div id="page-profile" class="page">
-        <div class="prof-card">
-            <div class="prof-avatar">👤</div>
-            <h3 id="pName">Keneng</h3>
-            <p style="color:var(--muted)">UID: <span id="pUid">100012</span></p>
-            <div class="prof-level">🏅 Bronze</div>
-            <div class="prof-stats">
-                <div><p style="color:var(--muted);font-size:12px">Level</p><b>Bronze</b></div>
-                <div><p style="color:var(--muted);font-size:12px">Total Poin</p><b id="pPoint">15,250</b></div>
-                <div><p style="color:var(--muted);font-size:12px">AST2 Coin</p><b id="pAst2">125.000</b></div>
-            </div>
-            <div class="prof-stats" style="margin-top:10px">
-                <div><p style="color:var(--muted);font-size:12px">Total Undangan</p><b id="pRef">12</b></div>
-                <div><p style="color:var(--muted);font-size:12px">Bergabung</p><b>30 Juli 2026</b></div>
-            </div>
-        </div>
-        <div class="prof-menu">
-            <div class="prof-mitem"><span>🔒 Keamanan</span><span>›</span></div>
-            <div class="prof-mitem"><span>💬 Dukungan</span><span>›</span></div>
-            <div class="prof-mitem"><span>ℹ️ Tentang AST2</span><span>›</span></div>
-            <div class="prof-mitem" style="color:#f44336"><span>🚪 Keluar</span><span>›</span></div>
-        </div>
-    </div>
+    <button class="btn" id="btnTukar"></button>
+  </div>
 </div>
 
-<!-- ===== BOTTOM NAVIGATION ===== -->
-<div class="nav">
-    <div class="nav-item active" onclick="bukaHalaman('home')"><i>🏠</i>Home</div>
-    <div class="nav-item" onclick="bukaHalaman('wallet')"><i>💰</i>Wallet</div>
-    <div class="nav-item" onclick="bukaHalaman('task')"><i>✅</i>Tugas</div>
-    <div class="nav-item" onclick="bukaHalaman('referral')"><i>👥</i>Undang</div>
-    <div class="nav-item" onclick="bukaHalaman('profile')"><i>👤</i>Akun</div>
-</div>
+<nav>
+  <button onclick="showPage('home')" id="navHome"></button>
+  <button onclick="showPage('task')" id="navTask"></button>
+  <button onclick="showPage('invite')" id="navInvite"></button>
+  <button onclick="showPage('wallet')" id="navWallet"></button>
+</nav>
 
-<script>
-// Data Penyimpanan
-let poin = parseInt(localStorage.getItem('ast2poin') || '15250');
-let coin = parseFloat(localStorage.getItem('ast2coin') || '125.000');
-let hariCheckin = parseInt(localStorage.getItem('ast2day') || '7');
-let sudahCheckin = localStorage.getItem('ast2checked') === 'yes';
-let miningAktif = localStorage.getItem('ast2mining') || 'off';
-let miningSelesai = parseInt(localStorage.getItem('ast2miningEnd') || '0');
-let uid = '100012';
-let nama = 'Keneng';
+<script type="module">
+import { initializeApp } from 'firebase-app';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from 'firebase-firestore';
+import { getAnalytics } from 'firebase-analytics';
 
-// Hadiah per hari check-in
-const hadiahCheckin = [100,150,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000,1050,1100,1150,1200,1250,1300,1350,1400,1450,1500,1550];
+// CONFIG FIREBASE KAMU
+const firebaseConfig = {
+  apiKey: "AIzaSyCVm5Pfg8wTrwFw8tClXse3Qa4boJkQ7Ek",
+  authDomain: "ast2-database.firebaseapp.com",
+  projectId: "ast2-database",
+  storageBucket: "ast2-database.firebasestorage.app",
+  messagingSenderId: "1057748242781",
+  appId: "1:1057748242781:web:83a08db2c828d1f3c298b4",
+  measurementId: "G-Z3HL3R1KHB"
+};
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db = getFirestore(app);
 
-// Inisialisasi
-window.onload = function(){
-    renderKalender();
-    perbaruiTampilan();
-    cekMining();
-}
-
-// Ganti Halaman
-function bukaHalaman(hal){
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-    document.getElementById('page-'+hal).classList.add('active');
-    event.currentTarget.classList.add('active');
-}
-
-function bukaCheckin(){
-    bukaHalaman('checkin');
-}
-
-// Mining
-function mulaiMining(){
-    if(miningAktif === 'on') return alert('⏳ Mining sedang berjalan! Tunggu selesai.');
-    miningAktif = 'on';
-    miningSelesai = Date.now() + 3*60*60*1000; // 3 jam
-    localStorage.setItem('ast2mining','on');
-    localStorage.setItem('ast2miningEnd',miningSelesai);
-    cekMining();
-}
-
-function cekMining(){
-    const btn = document.getElementById('btnMining');
-    if(miningAktif === 'on'){
-        let sisa = miningSelesai - Date.now();
-        if(sisa <= 0){
-            poin += 1000;
-            localStorage.setItem('ast2poin',poin);
-            miningAktif = 'off';
-            localStorage.setItem('ast2mining','off');
-            alert('✅ Mining selesai! +1.000 Poin');
-            perbaruiTampilan();
-            btn.innerText = 'MINING...'; btn.disabled = false;
-        }else{
-            let j = Math.floor(sisa/3600000);
-            let m = Math.floor((sisa%3600000)/60000);
-            let d = Math.floor((sisa%60000)/1000);
-            document.getElementById('miningTime').innerText = `${j}:${m}:${d}`;
-            btn.innerText = `⏳ ${j}:${m}:${d}`; btn.disabled = true;
-            setTimeout(cekMining,1000);
-        }
-    }else{
-        document.getElementById('miningTime').innerText = '03:00:00';
-        btn.innerText = '⛏️ MULAI MINING'; btn.disabled = false;
-    }
-}
-
-// Check-in
-function checkIn(){
-    bukaHalaman('checkin');
-}
-
-function klaimCheckin(){
-    if(sudahCheckin) return alert('✅ Sudah check-in hari ini! Lanjut besok.');
-    let hadiah = hadiahCheckin[hariCheckin-1] || 400;
-    poin += hadiah;
-    hariCheckin++;
-    sudahCheckin = true;
-    localStorage.setItem('ast2poin',poin);
-    localStorage.setItem('ast2day',hariCheckin);
-    localStorage.setItem('ast2checked','yes');
-    alert(`✅ Berhasil Check-in Hari ${hariCheckin-1}! +${hadiah} Poin`);
-    perbaruiTampilan();
-    renderKalender();
-}
-
-function renderKalender(){
-    const cont = document.getElementById('gridDays');
-    cont.innerHTML = '';
-    for(let i=1;i<=10;i++){
-        let cls = 'day-item';
-        if(i < hariCheckin) cls += ' claimed';
-        if(i === hariCheckin) cls += ' active';
-        cont.innerHTML += `<div class="${cls}"><div class="day-val">${i}</div><div class="day-rew">${hadiahCheckin[i-1]} Poin</div></div>`;
-    }
-    document.getElementById('ciDay').innerText = hariCheckin;
-    document.getElementById('dayNow').innerText = hariCheckin;
-}
-
-// Tugas
-function selesaikanTugas(btn,jumlah){
-    btn.disabled = true;
-    btn.innerText = '✅';
-    poin += jumlah;
-    localStorage.setItem('ast2poin',poin);
-    alert(`✅ Tugas selesai! +${jumlah} Poin`);
-    perbaruiTampilan();
-}
-
-// Salin Teks
-function salinTeks(teks){
-    navigator.clipboard.writeText(teks).then(()=>alert('✅ Disalin!'));
-}
-
-// Perbarui Tampilan
-function perbaruiTampilan(){
-    document.getElementById('hTotalPoint').innerText = poin.toLocaleString('id-ID');
-    document.getElementById('wPoint').innerText = poin.toLocaleString('id-ID');
-    document.getElementById('pPoint').innerText = poin.toLocaleString('id-ID');
-    document.getElementById('sumMining').innerText = Math.floor(poin*0.59).toLocaleString('id-ID');
-    document.getElementById('sumCheck').innerText = Math.floor(poin*0.21).toLocaleString('id-ID');
-    document.getElementById('sumRef').innerText = Math.floor(poin*0.13).toLocaleString('id-ID');
-    document.getElementById('sumTask').innerText = Math.floor(poin*0.07).toLocaleString('id-ID');
-    document.getElementById('sumTotal').innerText = poin.toLocaleString('id-ID');
-}
-    // ==============================================
-// FUNGSI SIMPAN & BACA DATA DARI DATABASE
-// ==============================================
-
-// 1. Dapatkan atau Buat UID Pengguna
-function dapatkanUID() {
-  let uid = localStorage.getItem('ast2uid');
-  if (!uid) {
-    uid = '100' + Math.floor(Math.random() * 900000);
-    localStorage.setItem('ast2uid', uid);
-  }
-  return uid;
-}
-
-// 2. Baca Siapa Yang Mengundang
-async function bacaPengundang() {
-  const uid = dapatkanUID();
-  const hash = window.location.search;
-  let pengundang = null;
-
-  // Baca kode undangan dari tautan
-  if (hash.includes('startapp=ref')) {
-    pengundang = hash.split('ref')[1];
-    localStorage.setItem('pengundang', pengundang);
-  }
-
-  // Cek apakah sudah terdaftar di Database
-  if (window.db) {
-    const { doc, getDoc, setDoc, updateDoc, increment } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js");
-    const ref = doc(window.db, "members", uid);
-    const snap = await getDoc(ref);
-
-    if (!snap.exists) {
-      // Daftar member baru
-      await setDoc(ref, {
-        uid: uid,
-        nama: "Pengguna " + uid,
-        poin: 0,
-        ast2: 0,
-        miningTerakhir: 0,
-        hariCheckin: 0,
-        sudahCheckin: false,
-        pengundang: pengundang,
-        totalUndangan: 0,
-        tanggalBergabung: new Date()
-      });
-      console.log("✅ Member Baru Tersimpan:", uid);
-
-      // Beri poin ke pengundang
-      if (pengundang) {
-        const refPengundang = doc(window.db, "members", pengundang);
-        const snapPengundang = await getDoc(refPengundang);
-        if (snapPengundang.exists) {
-          await updateDoc(refPengundang, {
-            poin: increment(100),
-            totalUndangan: increment(1)
-          });
-          alert("✅ Pengundang mendapat +100 Poin!");
-        }
-      }
-    }
-  }
-}
-
-// 3. Tambah Poin ke Database
-async function tambahPoinDatabase(jumlah) {
-  const uid = dapatkanUID();
-  if (!window.db) return;
-
-  const { doc, updateDoc, increment } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js");
-  const ref = doc(window.db, "members", uid);
-  await updateDoc(ref, {
-    poin: increment(jumlah)
-  });
-  console.log(`✅ +${jumlah} Poin tersimpan di Database!`);
-}
-
-// 4. Simpan Waktu Mining & Check-in
-async function simpanAktivitas(jenis, waktu) {
-  const uid = dapatkanUID();
-  if (!window.db) return;
-
-  const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js");
-  const ref = doc(window.db, "members", uid);
-  
-  if (jenis === 'mining') {
-    await updateDoc(ref, { miningTerakhir: waktu });
-  } else if (jenis === 'checkin') {
-    await updateDoc(ref, { hariCheckin: waktu, sudahCheckin: true });
-  }
-}
-
-// 5. Baca Data Pengguna Saat Ini
-async function bacaDataPengguna() {
-  const uid = dapatkanUID();
-  if (!window.db) return null;
-
-  const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js");
-  const ref = doc(window.db, "members", uid);
-  const snap = await getDoc(ref);
-  return snap.exists ? snap.data() : null;
-}
-
-// 6. Buat Tautan Undangan Otomatis
-function buatTautanUndangan() {
-  const uid = dapatkanUID();
-  return `https://t.me/asteroid2shiba_bot/app?startapp=ref${uid}`;
-}
-
-// ==============================================
-// JALANKAN SAAT APLIKASI DIBUKA
-// ==============================================
-window.onload = async function() {
-  await bacaPengundang();
-  console.log("✅ Data Pengguna Siap! UID:", dapatkanUID());
-  
-  // Tampilkan tautan undangan di halaman
-  const elemenTautan = document.getElementById('refLink');
-  if (elemenTautan) {
-    elemenTautan.innerText = buatTautanUndangan();
-  }
+// DATA BAHASA
+const translations = {
+  id: { home: "Beranda", task: "Tugas", invite: "Undang", wallet: "Dompet", balance: "Saldo Poin", poin: "Poin", mining: "⛏️ Mining +1000", checkin: "📅 Check-in +500", waitMining: "Tunggu 8 jam lagi!", waitCheckin: "Udah checkin hari ini!", doTask: "Kerjakan", done: "✅", taskTitle: "📋 Tugas Sosial", inviteTitle: "👥 Undang Teman", refText: "Link Referral Kamu:", refBonus: "Dapat +100 Poin tiap teman gabung", copy: "📋 Salin", walletTitle: "💰 Dompet", exchange: "🔄 Tukar 1000 Poin = 1 AST2", notEnough: "Minimal 1000 Poin", success: "Berhasil tukar 1 AST2!", confirmTask: "Sudah selesai kerjakan?" },
+  en: { home: "Home", task: "Tasks", invite: "Invite", wallet: "Wallet", balance: "Point Balance", poin: "Points", mining: "⛏️ Mine +1000", checkin: "📅 Daily Check-in +500", waitMining: "Wait 8 hours!", waitCheckin: "Already checked in today!", doTask: "Do Task", done: "✅", taskTitle: "📋 Social Tasks", inviteTitle: "👥 Invite Friends", refText: "Your Referral Link:", refBonus: "Get +100 Points for each friend", copy: "📋 Copy", walletTitle: "💰 Wallet", exchange: "🔄 Exchange 1000 Points = 1 AST2", notEnough: "Minimum 1000 Points", success: "Successfully exchanged 1 AST2!", confirmTask: "Finished the task?" },
+  cn: { home: "首页", task: "任务", invite: "邀请", wallet: "钱包", balance: "积分余额", poin: "积分", mining: "⛏️ 挖矿 +1000", checkin: "📅 每日签到 +500", waitMining: "请等待8小时!", waitCheckin: "今天已签到!", doTask: "做任务", done: "✅", taskTitle: "📋 社交任务", inviteTitle: "👥 邀请好友", refText: "你的推荐链接:", refBonus: "每邀请一位好友得 +100 积分", copy: "📋 复制", walletTitle: "💰 钱包", exchange: "🔄 兑换 1000 积分 = 1 AST2", notEnough: "最少 1000 积分", success: "成功兑换 1 AST2!", confirmTask: "完成任务了吗?" },
+  ar: { home: "الرئيسية", task: "المهام", invite: "دعوة", wallet: "المحفظة", balance: "رصيد النقاط", poin: "نقطة", mining: "⛏️ تعدين +1000", checkin: "📅 تسجيل يومي +500", waitMining: "انتظر 8 ساعات!", waitCheckin: "تم تسجيل الدخول اليوم!", doTask: "قم بالمهمة", done: "✅", taskTitle: "📋 المهام الاجتماعية", inviteTitle: "👥 دعوة الأصدقاء", refText: "رابط الإحالة الخاص بك:", refBonus: "احصل على +100 نقطة لكل صديق", copy: "📋 نسخ", walletTitle: "💰 المحفظة", exchange: "🔄 استبدل 1000 نقطة = 1 AST2", notEnough: "الحد الأدنى 1000 نقطة", success: "تم استبدال 1 AST2 بنجاح!", confirmTask: "هل أنهيت المهمة؟" },
+  kr: { home: "홈", task: "과제", invite: "초대", wallet: "지갑", balance: "포인트 잔액", poin: "포인트", mining: "⛏️ 채굴 +1000", checkin: "📅 일일 출석 +500", waitMining: "8시간 기다리세요!", waitCheckin: "오늘 이미 출석했습니다!", doTask: "과제하기", done: "✅", taskTitle: "📋 소셜 과제", inviteTitle: "👥 친구 초대", refText: "추천 링크:", refBonus: "친구 1명당 +100 포인트 지급", copy: "📋 복사", walletTitle: "💰 지갑", exchange: "🔄 1000 포인트 = 1 AST2 교환", notEnough: "최소 1000 포인트", success: "1 AST2 교환 성공!", confirmTask: "과제를 완료했나요?" }
 };
 
+// DATA TUGAS RESMI AST2
+const tasks = [
+  {id: 'tg', name: {id:'Join Channel Telegram',en:'Join Telegram Channel',cn:'加入Telegram频道',ar:'انضم إلى قناة تيليجرام',kr:'텔레그램 채널 가입'}, link: 'https://t.me/AST2_Official', poin: 100},
+  {id: 'x', name: {id:'Follow X',en:'Follow X',cn:'关注X',ar:'تابع X',kr:'X 팔로우'}, link: 'https://x.com/AKeneng3700', poin: 100},
+  {id: 'ig', name: {id:'Follow Instagram',en:'Follow Instagram',cn:'关注Instagram',ar:'تابع انستجرام',kr:'인스타그램 팔로우'}, link: 'https://www.instagram.com/asteroid2shiba', poin: 100},
+  {id: 'fb', name: {id:'Like Facebook',en:'Like Facebook',cn:'点赞Facebook',ar:'اعجاب فيسبوك',kr:'페이스북 좋아요'}, link: 'https://www.facebook.com/profile.php?id=61593496856177', poin: 100},
+  {id: 'yt', name: {id:'Subscribe YouTube',en:'Subscribe YouTube',cn:'订阅YouTube',ar:'اشترك يوتيوب',kr:'유튜브 구독'}, link: 'https://www.youtube.com/@asteroid2shiba', poin: 100},
+];
+
+let tg = window.Telegram.WebApp; tg.expand();
+const userId = tg.initDataUnsafe?.user?.id || 'guest_' + Math.random();
+let currentLang = localStorage.getItem('lang') || 'id';
+let t = translations[currentLang];
+let userData = {poin: 0, lastMining: 0, lastCheckin: "", tasks: {}, ref: ''};
+
+async function loadUser() {
+  const ref = doc(db, "users", userId.toString());
+  const snap = await getDoc(ref);
+  if(snap.exists()) userData = snap.data();
+  else {
+    const refParam = new URLSearchParams(window.location.search).get('startapp');
+    if(refParam && refParam!== userId.toString()) {
+      userData.ref = refParam;
+      await updateDoc(doc(db, "users", refParam), {poin: increment(100)});
+    }
+    await setDoc(ref, userData);
+  }
+  updateUI(); renderTasks(); generateRefLink();
+}
+
+function updateUI() {
+  document.getElementById('langSelect').value = currentLang;
+  document.body.dir = currentLang === 'ar'? 'rtl' : 'ltr';
+  document.getElementById('balanceText').innerText = t.balance;
+  document.getElementById('poinLabel').innerText = t.poin;
+  document.getElementById('btnMining').innerText = t.mining;
+  document.getElementById('btnCheckin').innerText = t.checkin;
+  document.getElementById('taskTitle').innerText = t.taskTitle;
+  document.getElementById('inviteTitle').innerText = t.inviteTitle;
+  document.getElementById('refText').innerText = t.refText;
+  document.getElementById('refBonus').innerText = t.refBonus;
+  document.getElementById('copyBtn').innerText = t.copy;
+  document.getElementById('walletTitle').innerText = t.walletTitle;
+  document.getElementById('btnTukar').innerText = t.exchange;
+  document.getElementById('navHome').innerText = '🏠 ' + t.home;
+  document.getElementById('navTask').innerText = '📋 ' + t.task;
+  document.getElementById('navInvite').innerText = '👥 ' + t.invite;
+  document.getElementById('navWallet').innerText = '💰 ' + t.wallet;
+  document.getElementById('poin').innerText = userData.poin;
+  document.getElementById('poin2').innerText = userData.poin;
+  document.getElementById('ast2').innerText = (userData.poin/1000).toFixed(2);
+  document.getElementById('ast22').innerText = (userData.poin/1000).toFixed(2);
+}
+
+document.getElementById('btnMining').onclick = async () => {
+  if(Date.now() - userData.lastMining < 8*60*60*1000) return alert(t.waitMining);
+  userData.lastMining = Date.now(); userData.poin += 1000;
+  await updateDoc(doc(db, "users", userId.toString()), {poin: increment(1000), lastMining: userData.lastMining});
+  updateUI();
+}
+
+document.getElementById('btnCheckin').onclick = async () => {
+  const today = new Date().toDateString();
+  if(userData.lastCheckin === today) return alert(t.waitCheckin);
+  userData.lastCheckin = today; userData.poin += 500;
+  await updateDoc(doc(db, "users", userId.toString()), {poin: increment(500), lastCheckin: today});
+  updateUI();
+}
+
+function renderTasks() {
+  const list = document.getElementById('taskList');
+  list.innerHTML = tasks.map(task => `
+    <div class="task">
+      <span>${task.name[currentLang]} +${task.poin}</span>
+      <button class="btn" style="width:auto;padding:8px 15px;" onclick="doTask('${task.id}', '${task.link}')">
+        ${userData.tasks[task.id]? t.done : t.doTask}
+      </button>
+    </div>
+  `).join('');
+}
+window.doTask = async (id, link) => {
+  if(userData.tasks[id]) return;
+  window.open(link, '_blank');
+  setTimeout(async () => {
+    if(confirm(t.confirmTask)) {
+      userData.tasks[id] = true; userData.poin += 100;
+      await updateDoc(doc(db, "users", userId.toString()), {poin: increment(100), [`tasks.${id}`]: true});
+      updateUI(); renderTasks();
+    }
+  }, 3000);
+}
+
+document.getElementById('btnTukar').onclick = async () => {
+  if(userData.poin < 1000) return alert(t.notEnough);
+  userData.poin -= 1000;
+  await updateDoc(doc(db, "users", userId.toString()), {poin: increment(-1000)});
+  alert(t.success); updateUI();
+}
+
+function generateRefLink() {
+  const link = `https://t.me/NAMA_BOT_KAMU/asteroid?startapp=${userId}`;
+  document.getElementById('refLink').value = link;
+}
+window.copyRef = () => { navigator.clipboard.writeText(document.getElementById('refLink').value); alert('Copied!'); }
+
+document.getElementById('langSelect').onchange = (e) => {
+  localStorage.setItem('lang', e.target.value); location.reload();
+}
+
+window.showPage = (id) => {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+loadUser();
 </script>
 </body>
 </html>
