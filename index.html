@@ -1,241 +1,75 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Asteroid App - AST2</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script type="importmap">
-{
-  "imports": {
-    "firebase-app": "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js",
-    "firebase-firestore": "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js",
-    "firebase-analytics": "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js"
-  }
-}
-</script>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-body { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: #fff; }
-.app { max-width: 450px; margin: auto; padding: 20px; padding-bottom: 80px; }
-.lang-selector { position: absolute; top: 15px; right: 15px; z-index: 100; }
-.lang-selector select { background: #1a2236; color: #fff; border: 1px solid #00ff88; border-radius: 8px; padding: 6px 10px; }
-nav { position: fixed; bottom: 0; left: 0; width: 100%; display: flex; background: #111; z-index: 99; border-top: 1px solid #222; }
-nav button { flex: 1; padding: 12px; background: none; border: none; color: #aaa; font-size: 12px; }
-nav button.active { color: #00ff88; }
-.page { display: none; }
-.page.active { display: block; }
-h1 { text-align: center; margin: 20px 0; font-size: 24px; }
-.card { background: rgba(26,34,54,0.8); padding: 20px; border-radius: 15px; margin: 15px 0; text-align: center; border: 1px solid #00ff8844; }
-.card h2 { font-size: 32px; color: #00ff88; margin: 10px 0; }
-.btn { width: 100%; padding: 15px; background: #00ff88; color: #000; border: none; border-radius: 12px; font-weight: bold; margin: 10px 0; cursor: pointer; }
-.btn:disabled { background: #444; color: #888; }
-.task { display: flex; justify-content: space-between; align-items: center; background: rgba(26,34,54,0.8); padding: 12px; border-radius: 10px; margin: 8px 0; }
-input { width: 100%; padding: 10px; background: #0a0e1a; border: 1px solid #333; color: #fff; border-radius: 8px; margin: 10px 0; }
-body[dir="rtl"] { direction: rtl; text-align: right; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asteroid2Shiba Mining</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; text-align: center; padding: 50px 20px; }
+        .container { background: #1a1a1a; padding: 30px; border-radius: 15px; max-width: 400px; margin: auto; border: 2px solid #ff9500; }
+        h1 { color: #ff9500; }
+        #poin { font-size: 40px; font-weight: bold; color: #00ff88; margin: 20px 0; }
+        button { background: #ff9500; color: #000; border: none; padding: 15px 30px; font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; }
+        button:active { background: #ffb84d; }
+        #status { margin-top: 15px; color: #aaa; }
+    </style>
 </head>
 <body>
-<div class="app">
-  <div class="lang-selector">
-    <select id="langSelect">
-      <option value="id">🇮🇩 Indonesia</option>
-      <option value="en">🇺🇸 English</option>
-      <option value="cn">🇨🇳 中文</option>
-      <option value="ar">🇸🇦 العربية</option>
-      <option value="kr">🇰🇷 한국어</option>
-    </select>
-  </div>
-
-  <div id="home" class="page active">
-    <h1>⛏️ Asteroid AST2</h1>
-    <div class="card">
-      <p id="balanceText">Saldo Poin</p>
-      <h2 id="poin">0</h2>
-      <p>= <span id="ast2">0.00</span> AST2</p>
+    <div class="container">
+        <h1>🚀 Asteroid2Shiba</h1>
+        <p>Poin Kamu:</p>
+        <div id="poin">0</div>
+        <button id="btnMining">Mining +1000</button>
+        <p id="status">Klik untuk mulai mining</p>
     </div>
-    <button class="btn" id="btnMining"></button>
-    <button class="btn" id="btnCheckin"></button>
-    <p id="timer" style="text-align:center; margin-top:10px; color:#aaa;"></p>
-  </div>
 
-  <div id="task" class="page">
-    <h1 id="taskTitle"></h1>
-    <div id="taskList"></div>
-  </div>
+    <!-- Firebase SDK Versi Web -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import { getFirestore, doc, setDoc, getDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  <div id="invite" class="page">
-    <h1 id="inviteTitle"></h1>
-    <div class="card">
-      <p id="refText"></p>
-      <input type="text" id="refLink" readonly>
-      <button class="btn" onclick="copyRef()" id="copyBtn"></button>
-    </div>
-    <p id="refBonus" style="text-align:center;"></p>
-  </div>
+      // 1. INI FIREBASECONFIG PUNYA KAMU - UDAH AKU LENGKAPIN
+      const firebaseConfig = {
+        apiKey: "AIzaSyAa7a5D6JlY4u4XdmDMH6_wY8FDWpBsKwk",
+        authDomain: "asteroid2shiba-67db6.firebaseapp.com",
+        projectId: "asteroid2shiba-67db6",
+        storageBucket: "asteroid2shiba-67db6.firebasestorage.app",
+        messagingSenderId: "519970187517",
+        appId: "1:519970187517:web:a0e85a6a4e7c34a0c87694"
+      };
 
-  <div id="wallet" class="page">
-    <h1 id="walletTitle"></h1>
-    <div class="card">
-      <p><span id="poin2">0</span> <span id="poinLabel">Poin</span></p>
-      <p><span id="ast22">0.00</span> AST2</p>
-    </div>
-    <button class="btn" id="btnTukar"></button>
-  </div>
-</div>
+      // 2. INISIALISASI
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
 
-<nav>
-  <button onclick="showPage('home')" id="navHome"></button>
-  <button onclick="showPage('task')" id="navTask"></button>
-  <button onclick="showPage('invite')" id="navInvite"></button>
-  <button onclick="showPage('wallet')" id="navWallet"></button>
-</nav>
+      // 3. ID USER SEMENTARA
+      const userId = "user_test_123"; 
 
-<script type="module">
-import { initializeApp } from 'firebase-app';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from 'firebase-firestore';
-import { getAnalytics } from 'firebase-analytics';
+      const poinEl = document.getElementById('poin');
+      const btn = document.getElementById('btnMining');
+      const statusEl = document.getElementById('status');
 
-// CONFIG FIREBASE KAMU
-const firebaseConfig = {
-  apiKey: "AIzaSyCVm5Pfg8wTrwFw8tClXse3Qa4boJkQ7Ek",
-  authDomain: "ast2-database.firebaseapp.com",
-  projectId: "ast2-database",
-  storageBucket: "ast2-database.firebasestorage.app",
-  messagingSenderId: "1057748242781",
-  appId: "1:1057748242781:web:83a08db2c828d1f3c298b4",
-  measurementId: "G-Z3HL3R1KHB"
-};
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const db = getFirestore(app);
+      // AMBIL DATA POIN SAAT BUKA
+      async function loadPoin() {
+        const docRef = doc(db, "users", userId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          poinEl.innerText = docSnap.data().poin;
+        }
+      }
+      loadPoin();
 
-// DATA BAHASA
-const translations = {
-  id: { home: "Beranda", task: "Tugas", invite: "Undang", wallet: "Dompet", balance: "Saldo Poin", poin: "Poin", mining: "⛏️ Mining +1000", checkin: "📅 Check-in +500", waitMining: "Tunggu 8 jam lagi!", waitCheckin: "Udah checkin hari ini!", doTask: "Kerjakan", done: "✅", taskTitle: "📋 Tugas Sosial", inviteTitle: "👥 Undang Teman", refText: "Link Referral Kamu:", refBonus: "Dapat +100 Poin tiap teman gabung", copy: "📋 Salin", walletTitle: "💰 Dompet", exchange: "🔄 Tukar 1000 Poin = 1 AST2", notEnough: "Minimal 1000 Poin", success: "Berhasil tukar 1 AST2!", confirmTask: "Sudah selesai kerjakan?" },
-  en: { home: "Home", task: "Tasks", invite: "Invite", wallet: "Wallet", balance: "Point Balance", poin: "Points", mining: "⛏️ Mine +1000", checkin: "📅 Daily Check-in +500", waitMining: "Wait 8 hours!", waitCheckin: "Already checked in today!", doTask: "Do Task", done: "✅", taskTitle: "📋 Social Tasks", inviteTitle: "👥 Invite Friends", refText: "Your Referral Link:", refBonus: "Get +100 Points for each friend", copy: "📋 Copy", walletTitle: "💰 Wallet", exchange: "🔄 Exchange 1000 Points = 1 AST2", notEnough: "Minimum 1000 Points", success: "Successfully exchanged 1 AST2!", confirmTask: "Finished the task?" },
-  cn: { home: "首页", task: "任务", invite: "邀请", wallet: "钱包", balance: "积分余额", poin: "积分", mining: "⛏️ 挖矿 +1000", checkin: "📅 每日签到 +500", waitMining: "请等待8小时!", waitCheckin: "今天已签到!", doTask: "做任务", done: "✅", taskTitle: "📋 社交任务", inviteTitle: "👥 邀请好友", refText: "你的推荐链接:", refBonus: "每邀请一位好友得 +100 积分", copy: "📋 复制", walletTitle: "💰 钱包", exchange: "🔄 兑换 1000 积分 = 1 AST2", notEnough: "最少 1000 积分", success: "成功兑换 1 AST2!", confirmTask: "完成任务了吗?" },
-  ar: { home: "الرئيسية", task: "المهام", invite: "دعوة", wallet: "المحفظة", balance: "رصيد النقاط", poin: "نقطة", mining: "⛏️ تعدين +1000", checkin: "📅 تسجيل يومي +500", waitMining: "انتظر 8 ساعات!", waitCheckin: "تم تسجيل الدخول اليوم!", doTask: "قم بالمهمة", done: "✅", taskTitle: "📋 المهام الاجتماعية", inviteTitle: "👥 دعوة الأصدقاء", refText: "رابط الإحالة الخاص بك:", refBonus: "احصل على +100 نقطة لكل صديق", copy: "📋 نسخ", walletTitle: "💰 المحفظة", exchange: "🔄 استبدل 1000 نقطة = 1 AST2", notEnough: "الحد الأدنى 1000 نقطة", success: "تم استبدال 1 AST2 بنجاح!", confirmTask: "هل أنهيت المهمة؟" },
-  kr: { home: "홈", task: "과제", invite: "초대", wallet: "지갑", balance: "포인트 잔액", poin: "포인트", mining: "⛏️ 채굴 +1000", checkin: "📅 일일 출석 +500", waitMining: "8시간 기다리세요!", waitCheckin: "오늘 이미 출석했습니다!", doTask: "과제하기", done: "✅", taskTitle: "📋 소셜 과제", inviteTitle: "👥 친구 초대", refText: "추천 링크:", refBonus: "친구 1명당 +100 포인트 지급", copy: "📋 복사", walletTitle: "💰 지갑", exchange: "🔄 1000 포인트 = 1 AST2 교환", notEnough: "최소 1000 포인트", success: "1 AST2 교환 성공!", confirmTask: "과제를 완료했나요?" }
-};
-
-// DATA TUGAS RESMI AST2
-const tasks = [
-  {id: 'tg', name: {id:'Join Channel Telegram',en:'Join Telegram Channel',cn:'加入Telegram频道',ar:'انضم إلى قناة تيليجرام',kr:'텔레그램 채널 가입'}, link: 'https://t.me/AST2_Official', poin: 100},
-  {id: 'x', name: {id:'Follow X',en:'Follow X',cn:'关注X',ar:'تابع X',kr:'X 팔로우'}, link: 'https://x.com/AKeneng3700', poin: 100},
-  {id: 'ig', name: {id:'Follow Instagram',en:'Follow Instagram',cn:'关注Instagram',ar:'تابع انستجرام',kr:'인스타그램 팔로우'}, link: 'https://www.instagram.com/asteroid2shiba', poin: 100},
-  {id: 'fb', name: {id:'Like Facebook',en:'Like Facebook',cn:'点赞Facebook',ar:'اعجاب فيسبوك',kr:'페이스북 좋아요'}, link: 'https://www.facebook.com/profile.php?id=61593496856177', poin: 100},
-  {id: 'yt', name: {id:'Subscribe YouTube',en:'Subscribe YouTube',cn:'订阅YouTube',ar:'اشترك يوتيوب',kr:'유튜브 구독'}, link: 'https://www.youtube.com/@asteroid2shiba', poin: 100},
-];
-
-let tg = window.Telegram.WebApp; tg.expand();
-const userId = tg.initDataUnsafe?.user?.id || 'guest_' + Math.random();
-let currentLang = localStorage.getItem('lang') || 'id';
-let t = translations[currentLang];
-let userData = {poin: 0, lastMining: 0, lastCheckin: "", tasks: {}, ref: ''};
-
-async function loadUser() {
-  const ref = doc(db, "users", userId.toString());
-  const snap = await getDoc(ref);
-  if(snap.exists()) userData = snap.data();
-  else {
-    const refParam = new URLSearchParams(window.location.search).get('startapp');
-    if(refParam && refParam!== userId.toString()) {
-      userData.ref = refParam;
-      await updateDoc(doc(db, "users", refParam), {poin: increment(100)});
-    }
-    await setDoc(ref, userData);
-  }
-  updateUI(); renderTasks(); generateRefLink();
-}
-
-function updateUI() {
-  document.getElementById('langSelect').value = currentLang;
-  document.body.dir = currentLang === 'ar'? 'rtl' : 'ltr';
-  document.getElementById('balanceText').innerText = t.balance;
-  document.getElementById('poinLabel').innerText = t.poin;
-  document.getElementById('btnMining').innerText = t.mining;
-  document.getElementById('btnCheckin').innerText = t.checkin;
-  document.getElementById('taskTitle').innerText = t.taskTitle;
-  document.getElementById('inviteTitle').innerText = t.inviteTitle;
-  document.getElementById('refText').innerText = t.refText;
-  document.getElementById('refBonus').innerText = t.refBonus;
-  document.getElementById('copyBtn').innerText = t.copy;
-  document.getElementById('walletTitle').innerText = t.walletTitle;
-  document.getElementById('btnTukar').innerText = t.exchange;
-  document.getElementById('navHome').innerText = '🏠 ' + t.home;
-  document.getElementById('navTask').innerText = '📋 ' + t.task;
-  document.getElementById('navInvite').innerText = '👥 ' + t.invite;
-  document.getElementById('navWallet').innerText = '💰 ' + t.wallet;
-  document.getElementById('poin').innerText = userData.poin;
-  document.getElementById('poin2').innerText = userData.poin;
-  document.getElementById('ast2').innerText = (userData.poin/1000).toFixed(2);
-  document.getElementById('ast22').innerText = (userData.poin/1000).toFixed(2);
-}
-
-document.getElementById('btnMining').onclick = async () => {
-  if(Date.now() - userData.lastMining < 8*60*60*1000) return alert(t.waitMining);
-  userData.lastMining = Date.now(); userData.poin += 1000;
-  await updateDoc(doc(db, "users", userId.toString()), {poin: increment(1000), lastMining: userData.lastMining});
-  updateUI();
-}
-
-document.getElementById('btnCheckin').onclick = async () => {
-  const today = new Date().toDateString();
-  if(userData.lastCheckin === today) return alert(t.waitCheckin);
-  userData.lastCheckin = today; userData.poin += 500;
-  await updateDoc(doc(db, "users", userId.toString()), {poin: increment(500), lastCheckin: today});
-  updateUI();
-}
-
-function renderTasks() {
-  const list = document.getElementById('taskList');
-  list.innerHTML = tasks.map(task => `
-    <div class="task">
-      <span>${task.name[currentLang]} +${task.poin}</span>
-      <button class="btn" style="width:auto;padding:8px 15px;" onclick="doTask('${task.id}', '${task.link}')">
-        ${userData.tasks[task.id]? t.done : t.doTask}
-      </button>
-    </div>
-  `).join('');
-}
-window.doTask = async (id, link) => {
-  if(userData.tasks[id]) return;
-  window.open(link, '_blank');
-  setTimeout(async () => {
-    if(confirm(t.confirmTask)) {
-      userData.tasks[id] = true; userData.poin += 100;
-      await updateDoc(doc(db, "users", userId.toString()), {poin: increment(100), [`tasks.${id}`]: true});
-      updateUI(); renderTasks();
-    }
-  }, 3000);
-}
-
-document.getElementById('btnTukar').onclick = async () => {
-  if(userData.poin < 1000) return alert(t.notEnough);
-  userData.poin -= 1000;
-  await updateDoc(doc(db, "users", userId.toString()), {poin: increment(-1000)});
-  alert(t.success); updateUI();
-}
-
-function generateRefLink() {
-  const link = `https://t.me/asteroid2shiba_bot/mine?startapp=${userId}`;
-  document.getElementById('refLink').value = link;
-}
-window.copyRef = () => { navigator.clipboard.writeText(document.getElementById('refLink').value); alert('Copied!'); }
-
-document.getElementById('langSelect').onchange = (e) => {
-  localStorage.setItem('lang', e.target.value); location.reload();
-}
-
-window.showPage = (id) => {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  event.target.classList.add('active');
-}
-
-loadUser();
-</script>
+      // KETIKA TOMBOL DIKLIK
+      btn.addEventListener('click', async () => {
+        statusEl.innerText = "Menyimpan...";
+        const docRef = doc(db, "users", userId);
+        
+        await setDoc(docRef, { poin: increment(1000) }, { merge: true });
+        
+        await loadPoin();
+        statusEl.innerText = "Berhasil! +1000 Poin";
+        setTimeout(() => statusEl.innerText = "Klik untuk mining lagi", 2000);
+      });
+    </script>
 </body>
 </html>
